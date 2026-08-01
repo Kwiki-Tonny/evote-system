@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// This is the blueprint for a "School" that signs up.
+model Tenant {
+  id          String   @id @default(uuid())
+  school_name String
+  subdomain   String   @unique   // e.g., "hillside" or "stmarys"
+  created_at  DateTime @default(now())
+}

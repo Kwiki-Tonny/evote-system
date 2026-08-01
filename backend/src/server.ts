@@ -1,10 +1,18 @@
 // 1. Import the libraries
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import { PrismaClient } from '@prisma/client'; 
+import { PrismaPg } from '@prisma/adapter-pg'; 
+import { Pool } from 'pg'; 
 
 // 2. Create the app instance
 //    { logger: true } means we will see errors in the terminal.
 const app = Fastify({ logger: true });
+
+// Create a PostgreSQL connection pool
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 // 3. Register CORS so the frontend can talk to us
 app.register(cors, { origin: '*' });
@@ -17,7 +25,17 @@ app.get('/api/health', async (request, reply) => {
   return { status: 'OK', message: 'Evote Backend is running!' };
 });
 
-// 5. Start the server
+// 5. Define a route to test database connection
+app.get('/api/tenants', async (request, reply) => {
+  try {
+    const tenants = await prisma.tenant.findMany();
+    return { success: true, data: tenants };
+  } catch (error) {
+    reply.status(500).send({ error: 'Database connection failed' });
+  }
+});
+
+// 6. Start the server
 const start = async () => {
   try {
     // Listen on port 4000. '0.0.0.0' means allow connections from anywhere.
